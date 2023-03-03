@@ -41,38 +41,110 @@ zoopenv     <- zoopdata3[, c(1,3,5,10:25)]
 
 
 ####ALPHA DIVERSITY####
-#calculate some diversity indices
-#function for eveness
-Evar <- function(x){
-  x <- as.vector(x[x > 0])
-  1 - (2/pi) * atan(var(log(x)))
+#function for simpson diversity
+SimpD <- function(x =""){
+  D = 0
+  N = sum(x)
+  for (n_i in x){
+    D = D + (n_i^2)/(N^2)
+  }
+  return(D)
 }
 
+
 #calculating some alpha diversity indices
+zoopdata3$simpson     <- SimpD(zoopdata3[,6:9])
 zoopdata3$shannon     <- diversity(zoopdata3[,6:9], index = "shannon")
-zoopdata3$richness    <- specnumber(zoopdata3[,6:9])
-zoopdata3$eveness     <- Evar(zoopdata3[,6:9])
+
+#Hill Numbers 
+zoopdata3$expshannon  <- exp(diversity(zoopdata3[,6:9], index = "shannon")) #q = 1
+zoopdata3$richness    <- specnumber(zoopdata3[,6:9]) #q = 0
+zoopdata3$invsimp     <- 1/SimpD(zoopdata3[,6:9]) #q = 2
 
 #plotting over time for each lake
 ggplot(zoopdata3, aes(x = year, y = shannon, group = Lake_Name, color = Lake_Name))+
   geom_jitter(aes(x = year, y = shannon), 
-              size=3, width = 0.1)+
+              size=3, width = 0.1, alpha = .5)+
+  geom_line(aes(x = year, y = shannon, color = Lake_Name, group = Lake_Name))+
   labs (x = "year", y = "shannon diversity")+
   theme_bw()+
-  theme(axis.text = element_text(size = 16, color = "black"),
-        axis.title = element_text(size = 24, color = "black"),
-        legend.title = element_blank())
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)+
+  theme(legend.position = "none")
 
-ggplot(zoopdata3, aes(x = year, y = eveness, group = Lake_Name, color = Lake_Name))+
-  geom_jitter(aes(x = year, y = eveness), 
-              size=3, width = 0.1)+
-  labs (x = "year", y = "eveness")+
+ggplot(zoopdata3, aes(x = year, y = expshannon, group = Lake_Name, color = Lake_Name))+
+  geom_jitter(aes(x = year, y = expshannon), 
+              size=3, width = 0.1, alpha = .5)+
+  geom_line(aes(x = year, y = expshannon, color = Lake_Name, group = Lake_Name))+
+  labs (x = "year", y = "exponential shannon entropy")+
   theme_bw()+
-  theme(axis.text = element_text(size = 16, color = "black"),
-        axis.title = element_text(size = 24, color = "black"),
-        legend.title = element_blank())
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)+
+  theme(legend.position = "none")
+  
+ggplot(zoopdata3, aes(x = year, y = simpson, group = Lake_Name, color = Lake_Name))+
+  geom_jitter(aes(x = year, y = simpson), 
+              size=3, width = 0.1, alpha = .5)+
+  geom_line(aes(x = year, y = simpson, color = Lake_Name, group = Lake_Name))+
+  labs (x = "year", y = "simpson diversity")+
+  theme_bw()+
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)+
+  theme(legend.position = "none")
 
-####VISUALIZING ENV CHARACTERISTICS####
+ggplot(zoopdata3, aes(x = year, y = richness, group = Lake_Name, color = Lake_Name))+
+  geom_jitter(aes(x = year, y = richness), 
+              size=3, width = 0.1, alpha = .5)+
+  labs (x = "year", y = "species richness")+
+  theme_bw()+
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)+
+  theme(legend.position = "none")
+  
+ggplot(zoopdata3, aes(x = year, y = invsimp, group = Lake_Name, color = Lake_Name))+
+  geom_jitter(aes(x = year, y = invsimp), 
+              size=3, width = 0.1, alpha = .5)+
+  geom_line(aes(x = year, y = invsimp, color = Lake_Name, group = Lake_Name))+
+  labs (x = "year", y = "inverse simpson diversity")+
+  theme_bw()+
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)+
+  theme(legend.position = "none")
+
+ggplot(zoopdata3, aes(x = richness, y = shannon, group = Lake_Name, color = Lake_Name))+
+  geom_jitter(aes(x = richness, y = shannon), 
+              size=3, width = 0.1, alpha = .5)+
+  labs (x = "species richness", y = "shannon diversity")+
+  theme_bw()+
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)+
+  theme(legend.position = "none")
+
+
+ggplot(zoopdata3, aes(x = richness, y = expshannon, group = Lake_Name, color = Lake_Name))+
+  geom_jitter(aes(x = richness, y = expshannon), 
+              size=3, width = 0.1, alpha = .5)+
+  labs (x = "species richness", y = "exponential shannon diversity")+
+  theme_bw()+
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)+
+  theme(legend.position = "none")
+
+####VISUALIZING ENVIRONMENTAL CHARACTERISTICS####
 #environmental characteristics#
 #calculating N:P ratio
 zoopenv$NP_ratio <- zoopenv$N_ug/zoopenv$P_ug
@@ -87,46 +159,25 @@ zoopenvlong <- zoopenv %>%
 zoopenvlong$year <- format(as.Date(zoopenvlong$date, format="%Y/%m/%d"),"%Y")
   
 #Plot through time
-ggplot(zoopenvlong, aes(x = year, y = log(values), group = Lake_Name, color = Lake_Name))+
-  geom_jitter(aes(x = year, y = log(values)), 
-              size=3, width = 0.1)+
-  labs (x = "year", y = "metric")+
-  facet_wrap(~env)
-
+#scale function to get z scores of environmental factors   
+zoopenvlong$scalevalues <- scale(zoopenvlong$values)
+ggplot(zoopenvlong, aes(x = year, y = scalevalues, group = env, color = env))+
+  ylim(c(-5.0,10))+
+  geom_jitter(aes(x = year, y = scalevalues), 
+              position = "jitter")+
+  labs (x = "year", y = "scaled environmental values")+
+  theme_bw()+
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  facet_wrap(~Lake_Name)
 
 ####BETA DIVERSITY####
 #constructing a resemblance matrix 
 dist      <- as.matrix(vegdist(zoopdata3[,6:9], "bray"))
 interval  <- diff(zoopdata3$days, lag = 1)
 
-#zoop pcoa to visualize beta diversity 
-zoop.pcoa <- cmdscale(dist, eig = TRUE, k = 3)
-
-explainvar1 <- round(zoop.pcoa$eig[1] / sum(zoop.pcoa$eig), 3) * 100
-explainvar2 <- round(zoop.pcoa$eig[2] / sum(zoop.pcoa$eig), 3) * 100
-explainvar3 <- round(zoop.pcoa$eig[3] / sum(zoop.pcoa$eig), 3) * 100 
-sum.eig     <- sum(explainvar1, explainvar2, explainvar3)
-
-par(mar = c(5,5,1,2) + 0.1)
-
-plot(zoop.pcoa$point[ ,1], zoop.pcoa$points[ ,2], ylim = c(-0.2, 0.7),
-     xlab = paste("PCoA 1 (", explainvar1, "%)", sep = ""),
-     ylab = paste("PCoA 2 (", explainvar2, "%)", sep = ""),
-     pch = 16, cex = 2.0, type = "n", cex.lab = 1.5,
-     cex.axis = 1.2, axes = FALSE
-)
-
-axis(side = 1, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
-axis(side = 2, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
-abline(h = 0, v = 0, lty = 3)
-box(lwd = 2)
-
-points(zoop.pcoa$points[,1], zoop.pcoa$points[,2],
-       pch = 19, cex = 3, bg = "gray", col = "gray")
-text(zoop.pcoa$points[ ,1], zoop.pcoa$points[ ,2],
-     labels = row.names(zoop.pcoa$points))
-
-#perform dbRDA
+#dbRDA
 zoop.dbrda <- dbrda(dist ~ ., as.data.frame(zoopenv[,3:20]))
 ordiplot(zoop.dbrda)
 
@@ -185,10 +236,6 @@ axis(side = 3, lwd.ticks = 2, cex.axis = 1.2, las = 1, col = "red", lwd = 2.2,
 axis(side = 4, lwd.ticks = 2, cex.axis = 1.2, las = 1, col = "red", lwd = 2.2,
      at = pretty(range(vectors[, 2])) * 2, labels = pretty(range(vectors[, 2])))
 
-ggplot(zoopenv, aes(x = date, y = N_ug))+
-  geom_jitter(aes(x = date, y = N_ug), 
-              size=3, width = 0.1)+
-  labs (x = "year", y = "metric")
 
 #creating vectors of environmental characteristics that were significant
 median(zoopenv$N_ug)
@@ -203,6 +250,10 @@ median(zoopenv$mspc)
 min(zoopenv$mspc)
 max(zoopenv$mspc)
 
+median(zoopenv$mDO)
+min(zoopenv$mDO)
+max(zoopenv$mDO)
+
 zoopenv.2 <- zoopenv%>%
   mutate(Nug   = case_when(N_ug < 364 ~ 'low',
                            N_ug < 500 ~ 'med',
@@ -210,21 +261,29 @@ zoopenv.2 <- zoopenv%>%
   mutate(meanT = case_when(mT < 10 ~ 'low',
                            mT < 19.1186 ~ 'med',
                            mT > 19.1186 ~ 'high'))%>%
-  mutate(mspc  = case_when(mspc  < 1000.00~ 'low',
+  mutate(cond  = case_when(mspc  < 1000.00~ 'low',
                            mspc  < 1750.00 ~ 'med',
-                           mspc  > 1751.00 ~ 'high'))
+                           mspc  > 1751.00 ~ 'high'))%>%
+  mutate(DO = case_when(mDO  < 4.0 ~ 'low',
+                         mDO < 7.90685 ~ 'med',
+                         mDO >  7.90686 ~ 'high'))
 
 Nug <- zoopenv.2[,21]
 table(Nug)
 Nug <- c(rep("low", 70), rep("med", 41), rep("high", 31))
 
-meanT <- zoopenv.2[,21]
+meanT <- zoopenv.2[,22]
 table(meanT)
 meanT <- c(rep("high", 71), rep("med", 65), rep("low", 6))
 
-mspc <- zoopenv.2[,21]
-table(mspc)
-mspc <- c(rep("high", 31), rep("med", 41), rep("low", 70))
+cond <- zoopenv.2[,23]
+table(cond)
+cond <- c(rep("high", 31), rep("med", 87), rep("low", 24))
+
+DO <- zoopenv.2[,24]
+table(DO)
+DO <- c(rep("high", 71), rep("med", 69), rep("low", 2))
+
 
 #species associations#
 zoop.rel <- decostand(zoopspecies, method = "total")
@@ -235,11 +294,17 @@ phi3 <- multipatt(zoop.rel, cluster = meanT, func = "r.g", control = how(nperm =
 summary(phi3)
 #nothing significant with temperature
 
-phi4 <-  multipatt(zoop.rel, cluster = mspc, func = "r.g", control = how(nperm = 999))
+phi4 <-  multipatt(zoop.rel, cluster = cond, func = "r.g", control = how(nperm = 999))
 summary(phi4)
 
+phi5 <-  multipatt(zoop.rel, cluster = DO, func = "r.g", control = how(nperm = 999))
+summary(phi5)
+
+#creating a long version of the environmental matrix
+zooplong <- zoopdata3 %>%
+  pivot_longer(cols = dent:Bosmina, names_to = "species", values_to = "density")
 #plotting density of each species with N_ug
-ggplot(zoopdataLong, aes(x = N_ug, y = log(density)))+
+ggplot(zooplong, aes(x = N_ug, y = log(density)))+
   geom_point()+
   geom_smooth(method = NULL, colour = "#CD9B1D")+
   labs(x = "Nitrogen (ug)", y = "log(density)")+
@@ -249,7 +314,7 @@ ggplot(zoopdataLong, aes(x = N_ug, y = log(density)))+
         legend.title = element_blank())+
   facet_wrap(~species)
 
-ggplot(zoopdataLong, aes(x = mspc, y = log(density)))+
+ggplot(zooplong, aes(x = mspc, y = log(density)))+
   geom_point()+
   geom_smooth(method = NULL, colour = "#CD9B1D")+
   labs(x = "Conductivity", y = "log(density)")+
@@ -259,19 +324,31 @@ ggplot(zoopdataLong, aes(x = mspc, y = log(density)))+
         legend.title = element_blank())+
   facet_wrap(~species)
 
+
 #NMDS and scores
-nmds1 <-metaMDS(dist, distance = "bray")
-scores1 <- as.data.frame(scores(nmds1))
+nmds2 <- metaMDS(zoopspecies, distance = "bray")
+scores2 <- as.data.frame(scores(nmds2)$sites)
 
-#subsetting nmds so can call as axis in plot
-zoopdata3$axis1 <- scores1$NMDS1 
-zoopdata3$axis2 <- scores1$NMDS2
+#environmental vectors
+en <- envfit(nmds2, zoopenv, perm = 999)
+env_vectors <- as.data.frame(scores(en, "vectors")) * ordiArrowMul(en)
 
-#plotting NMDS
-ggplot(zoopdata3, aes(x = days, y = axis1))+
-  geom_point()+
-  geom_smooth(method = "loess", span = 1, colour = "#CD9B1D")+
+scores2$Lake_Name = zoopdata3$Lake_Name
+
+ggplot(data = scores2, aes(x = NMDS1, y = NMDS2))+
+  geom_point(data = scores2, aes(colour = Lake_Name), size = 3, alpha = 0.5)+
+  coord_fixed()+
+  geom_segment(aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2),
+               data = env_vectors, colour = "#CD9B1D",
+               arrow = arrow(length = unit(0.2, "cm")))+
+  geom_text(data = env_vectors, aes(x = NMDS1, y = NMDS2), colour = "black",
+            label = row.names(env_vectors), size = 2.0)+
   theme_bw()+
-  theme(axis.text = element_text(size = 16, color = "black"),
-        axis.title = element_text(size = 24, color = "black"),
-        legend.title = element_blank())
+  theme(axis.text = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 20, color = "black"),
+        legend.title = element_blank())+
+  theme(legend.position = "bottom")
+  
+
+
+#compare between constrained and unconstrained, decision made, environmental data or experiment 
