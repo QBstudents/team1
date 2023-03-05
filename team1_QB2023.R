@@ -21,7 +21,7 @@ zoopdata <- read_csv("AllYears_Summary_111020.csv")
 str(zoopdata)
 
 
-#removing rounds with 'Marta' 
+#removing rounds with 'Marta' and replacing zeros with NA
 zoopdata2 <- subset(zoopdata, Round != "Marta")
 zoopdata2[zoopdata2 == 0] <- NA   
 str(zoopdata2)
@@ -144,23 +144,24 @@ ggplot(zoopdata3, aes(x = richness, y = expshannon, group = Lake_Name, color = L
   facet_wrap(~Lake_Name)+
   theme(legend.position = "none")
 
-####VISUALIZING ENVIRONMENTAL CHARACTERISTICS####
-#environmental characteristics#
+####VISUALIZING ENVIRONMENTAL PARAMETERS####
 #calculating N:P ratio
 zoopenv$NP_ratio <- zoopenv$N_ug/zoopenv$P_ug
 
-#see which characteristics have correlation
+#see if any have correlation
 ggcorr(zoopenv[c(3:20)],method=c("pairwise","pearson"))
 
 #creating a long version of the environmental matrix
 zoopenvlong <- zoopenv %>%
   pivot_longer(cols = Edible_Chl:NP_ratio, names_to = "env", values_to = "values")
 
+#make long form of environmental matrix
 zoopenvlong$year <- format(as.Date(zoopenvlong$date, format="%Y/%m/%d"),"%Y")
   
 #Plot through time
-#scale function to get z scores of environmental factors   
+#scale function to get z scores of environmental parameters   
 zoopenvlong$scalevalues <- scale(zoopenvlong$values)
+#making plot over time for each lake
 ggplot(zoopenvlong, aes(x = year, y = scalevalues, group = env, color = env))+
   ylim(c(-5.0,10))+
   geom_jitter(aes(x = year, y = scalevalues), 
@@ -173,7 +174,7 @@ ggplot(zoopenvlong, aes(x = year, y = scalevalues, group = env, color = env))+
   facet_wrap(~Lake_Name)
 
 ####BETA DIVERSITY####
-#constructing a resemblance matrix 
+#constructing a resemblance matrix using Bray-Curtis 
 dist      <- as.matrix(vegdist(zoopdata3[,6:9], "bray"))
 interval  <- diff(zoopdata3$days, lag = 1)
 
@@ -237,23 +238,29 @@ axis(side = 4, lwd.ticks = 2, cex.axis = 1.2, las = 1, col = "red", lwd = 2.2,
      at = pretty(range(vectors[, 2])) * 2, labels = pretty(range(vectors[, 2])))
 
 
-#creating vectors of environmental characteristics that were significant
+#creating vectors of environmental parameters that were "significant" 
+#first find median, min, max to make arbitrary limits to each vector
+#nitrogen
 median(zoopenv$N_ug)
 min(zoopenv$N_ug)
 max(zoopenv$N_ug)
 
+#mean temperature
 median(zoopenv$mT)
 min(zoopenv$mT)
 max(zoopenv$mT)
 
+#conductivity
 median(zoopenv$mspc)
 min(zoopenv$mspc)
 max(zoopenv$mspc)
 
+#mean dissolved oxygen
 median(zoopenv$mDO)
 min(zoopenv$mDO)
 max(zoopenv$mDO)
 
+#new columns of vectors 
 zoopenv.2 <- zoopenv%>%
   mutate(Nug   = case_when(N_ug < 364 ~ 'low',
                            N_ug < 500 ~ 'med',
@@ -285,7 +292,7 @@ table(DO)
 DO <- c(rep("high", 71), rep("med", 69), rep("low", 2))
 
 
-#species associations#
+#species preference to the selected environmental parameters#
 zoop.rel <- decostand(zoopspecies, method = "total")
 phi2 <- multipatt(zoop.rel, cluster = Nug, func = "r.g", control = how(nperm = 999))
 summary(phi2)
@@ -300,9 +307,10 @@ summary(phi4)
 phi5 <-  multipatt(zoop.rel, cluster = DO, func = "r.g", control = how(nperm = 999))
 summary(phi5)
 
-#creating a long version of the environmental matrix
+#creating a long version of the species matrix
 zooplong <- zoopdata3 %>%
   pivot_longer(cols = dent:Bosmina, names_to = "species", values_to = "density")
+
 #plotting density of each species with N_ug
 ggplot(zooplong, aes(x = N_ug, y = log(density)))+
   geom_point()+
@@ -313,7 +321,7 @@ ggplot(zooplong, aes(x = N_ug, y = log(density)))+
         axis.title = element_text(size = 24, color = "black"),
         legend.title = element_blank())+
   facet_wrap(~species)
-
+#plotting density of each species with conductivity 
 ggplot(zooplong, aes(x = mspc, y = log(density)))+
   geom_point()+
   geom_smooth(method = NULL, colour = "#CD9B1D")+
@@ -349,6 +357,3 @@ ggplot(data = scores2, aes(x = NMDS1, y = NMDS2))+
         legend.title = element_blank())+
   theme(legend.position = "bottom")
   
-
-
-#compare between constrained and unconstrained, decision made, environmental data or experiment 
